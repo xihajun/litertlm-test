@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Gemma4 LiteRT-LM</string>
+
+    <!-- Setup screen -->
+    <string name="setup_title">Model setup</string>
+    <string name="setup_subtitle">Gemma 4 E2B needs ~1.5 GB free storage.</string>
+    <string name="setup_browse_hf">Open Hugging Face page</string>
+    <string name="setup_pick_file">Pick downloaded .task / .litertlm file</string>
+    <string name="setup_download_inapp">Download in-app (paste HF token)</string>
+    <string name="setup_hf_token_hint">HF token (hf_xxx…)</string>
+    <string name="setup_initialize">Initialize engine</string>
+    <string name="setup_model_present">Model present ✓</string>
+    <string name="setup_model_missing">No model file found.</string>
+
+    <!-- Chat screen -->
+    <string name="chat_input_hint">Type a prompt…</string>
+    <string name="chat_send">Send</string>
+    <string name="chat_stop">Stop</string>
+    <string name="chat_clear">Clear</string>
+
+    <!-- Prompt cache -->
+    <string name="cache_title">Prompt caches</string>
+    <string name="cache_create">Cache this prompt as…</string>
+    <string name="cache_name_hint">Cache name</string>
+    <string name="cache_use">Use cache</string>
+    <string name="cache_delete">Delete</string>
+    <string name="cache_none">No caches yet. Long-press a prompt to cache its prefix.</string>
+</resources>
