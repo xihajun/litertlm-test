@@ -84,10 +84,15 @@ class PromptCacheManager(private val cacheDir: File) {
 
     /**
      * Returns a session that already has the cache's prompt prefilled.
-     * Cheap (cloneSession is in-memory). Returns null if the entry isn't warmed up.
+     * Cheap (cloneSession is in-memory). Returns null if:
+     *   - the entry isn't warmed up yet
+     *   - the backend doesn't support cloning (cloneSession requires OpenCL/GPU)
+     *   - cloneSession throws at runtime (some MediaPipe versions throw on CPU)
      */
-    fun cloneSession(id: String): LlmInferenceSession? =
-        entries[id]?.session?.cloneSession()
+    fun cloneSession(id: String): LlmInferenceSession? {
+        val warm = entries[id]?.session ?: return null
+        return runCatching { warm.cloneSession() }.getOrNull()
+    }
 
     /**
      * Rebuilds the warm session for [entry] by running prefill once. Must be called

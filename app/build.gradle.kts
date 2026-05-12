@@ -98,7 +98,10 @@ dependencies {
 
     // --- MediaPipe GenAI (this is the public Kotlin/Java front-end to LiteRT-LM)
     // It bundles the LiteRT-LM C++ engine via the .aar's native libs.
-    implementation("com.google.mediapipe:tasks-genai:0.10.20")
+    // 0.10.27 is the version Google's official docs recommend (April 2026). Earlier
+    // versions (e.g. 0.10.20) had `setTopP`, `cloneSession`, and the lambda form of
+    // `generateResponseAsync` as package-private or missing entirely.
+    implementation("com.google.mediapipe:tasks-genai:0.10.27")
 
     // --- OkHttp for downloading model files from HF ----------------------------
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

@@ -42,8 +42,11 @@ class LlmEngine(
         val options = LlmInference.LlmInferenceOptions.builder()
             .setModelPath(modelFile.absolutePath)
             .setMaxTokens(maxTokens)
-            // Newer MediaPipe versions allow picking the backend; default = GPU when available.
-            // .setPreferredBackend(LlmInference.Backend.GPU)
+            // cloneSession() requires an OpenCL-backed (GPU) session. The default may
+            // pick CPU on some devices, which silently disables session cloning, so we
+            // pin to GPU explicitly. If the device lacks OpenCL, createFromOptions
+            // will throw — caller surfaces that to the UI.
+            .setPreferredBackend(LlmInference.Backend.GPU)
             .build()
         llm = LlmInference.createFromOptions(appContext, options)
         isReady = true
