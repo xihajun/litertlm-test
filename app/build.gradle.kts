@@ -1,22 +1,21 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
     namespace = "com.example.gemmalitertlm"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.gemmalitertlm"
-        minSdk = 28          // MediaPipe LLM Inference needs API 28+ (Android 9)
-        targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 2
+        versionName = "0.2.0"
 
-        // Native libraries are large; allow legacy packaging so .so files aren't compressed.
         ndk {
-            // Limit to common 64-bit ABIs to keep APK size manageable.
             abiFilters += listOf("arm64-v8a", "x86_64")
         }
     }
@@ -46,10 +45,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        // Compose compiler matching Kotlin 1.9.24
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
 
     packaging {
         resources.excludes += setOf(
@@ -60,13 +55,12 @@ android {
             "META-INF/NOTICE",
             "META-INF/NOTICE.txt"
         )
-        // .task and .litertlm model files might be packaged later; don't compress them.
         jniLibs.useLegacyPackaging = true
     }
 }
 
 dependencies {
-    // --- Compose BOM and core Compose deps -------------------------------------
+    // --- Compose BOM and core Compose deps ---
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -74,27 +68,24 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // --- AndroidX core ---------------------------------------------------------
+    // --- AndroidX core ---
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.1")
     implementation("androidx.documentfile:documentfile:1.0.1")
 
-    // --- Kotlin coroutines -----------------------------------------------------
+    // --- Kotlin coroutines ---
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // --- MediaPipe GenAI (this is the public Kotlin/Java front-end to LiteRT-LM)
-    // It bundles the LiteRT-LM C++ engine via the .aar's native libs.
-    // 0.10.27 is the version Google's official docs recommend (April 2026). Earlier
-    // versions (e.g. 0.10.20) had `setTopP`, `cloneSession`, and the lambda form of
-    // `generateResponseAsync` as package-private or missing entirely.
-    implementation("com.google.mediapipe:tasks-genai:0.10.27")
+    // --- LiteRT-LM (the current, non-deprecated Google on-device LLM SDK)
+    // Replaces the deprecated com.google.mediapipe:tasks-genai.
+    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
 
-    // --- OkHttp for downloading model files from HF ----------------------------
+    // --- OkHttp for downloading model files from HF ---
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // --- Tooling ---------------------------------------------------------------
+    // --- Tooling ---
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

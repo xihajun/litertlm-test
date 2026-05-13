@@ -2,11 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Internet for downloading the .task model from Hugging Face. -->
+    <!-- Internet for downloading the .litertlm model from Hugging Face. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Allow large heap — Gemma 4 E2B int4 is ~1.5 GB; KV cache adds another ~200 MB. -->
+    <!-- Allow large heap — Gemma 4 E4B is ~8 GB; KV cache adds more. -->
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -18,6 +18,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GemmaLiteRT"
         tools:targetApi="34">
+
+        <!-- GPU acceleration via OpenCL (for LiteRT-LM Backend.GPU) -->
+        <uses-native-library android:name="libvndksupport.so" android:required="false" />
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
 
         <activity
             android:name=".MainActivity"

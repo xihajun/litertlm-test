@@ -11,6 +11,8 @@ import com.example.gemmalitertlm.download.ModelDownloader
 import com.example.gemmalitertlm.inference.LlmEngine
 import com.example.gemmalitertlm.inference.PromptCacheManager
 import com.example.gemmalitertlm.inference.TokenEvent
+import com.google.ai.edge.litertlm.Backend
+import com.google.ai.edge.litertlm.Conversation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +27,7 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
     // -- Files --------------------------------------------------------------
     private val modelDir: File = File(getApplication<Application>().filesDir, "models")
         .apply { mkdirs() }
-    private val modelFile: File = File(modelDir, "gemma-4-e2b.task")
+    private val modelFile: File = File(modelDir, "model.litertlm")
     private val cacheDir: File = File(getApplication<Application>().filesDir, "prompt_caches")
         .apply { mkdirs() }
 
@@ -50,7 +52,7 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
             it.copy(
                 modelPresent = modelFile.exists() && modelFile.length() > 0,
                 modelSizeMb = if (modelFile.exists()) modelFile.length() / (1024 * 1024) else 0,
-                cachesOnDisk = cacheManager.list().map { e -> CacheUi(e.id, e.name, e.tokenCountHint, warm = e.session != null) },
+                cachesOnDisk = cacheManager.list().map { e -> CacheUi(e.id, e.name, e.tokenCountHint) },
             )
         }
     }
@@ -61,8 +63,8 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
         launchIntent(intent)
     }
 
-    /** Called when the user picks a .task file from the system picker. */
-    fun importPickedFile(uri: android.net.Uri) {
+    /** Called when the user picks a .litertlm file from the system picker. */
+    fun importPickedFile(uri: Uri) {
         val resolver = getApplication<Application>().contentResolver
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(status = "Copying model file…") }
@@ -109,18 +111,15 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _uiState.update { it.copy(status = "Loading Gemma 4 E2B into LiteRT-LM…") }
-                val e = LlmEngine(getApplication(), modelFile).also { it.initialize() }
+                _uiState.update { it.copy(status = "Loading model into LiteRT-LM (GPU)…") }
+                val cachePath = getApplication<Application>().cacheDir.absolutePath
+                val e = LlmEngine(
+                    modelPath = modelFile.absolutePath,
+                    backend = Backend.GPU(),
+                    cacheDir = cachePath,
+                ).also { it.initialize() }
                 engine = e
                 _uiState.update { it.copy(status = "Engine ready.", engineReady = true) }
-                // Warm up any caches that were persisted across launches.
-                cacheManager.list().forEach { entry ->
-                    if (entry.session == null) {
-                        cacheManager.warmUp(entry, e) { msg ->
-                            _uiState.update { it.copy(status = msg) }
-                        }
-                    }
-                }
                 refreshSetupState()
             } catch (t: Throwable) {
                 _uiState.update { it.copy(status = "Init failed: ${t.message}") }
@@ -140,23 +139,22 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
 
         generationJob?.cancel()
         generationJob = viewModelScope.launch(Dispatchers.IO) {
-            // Pick session: either a clone of a cached pre-filled session,
-            // or a fresh empty session.
-            val (session, isClone) = if (useCacheId != null) {
-                val cloned = cacheManager.cloneSession(useCacheId)
-                if (cloned != null) cloned to true else e.createSession() to false
+            // Pick conversation: either from a cached prompt, or a fresh one.
+            val conversation: Conversation = if (useCacheId != null) {
+                cacheManager.createConversationFromCache(useCacheId, e)
+                    ?: e.createConversation()
             } else {
-                e.createSession() to false
+                e.createConversation()
             }
 
             appendMessage(role = Role.User, text = prompt)
-            appendMessage(role = Role.Assistant, text = "")  // placeholder we'll fill in
+            appendMessage(role = Role.Assistant, text = "")  // placeholder
 
             try {
-                e.generateStream(session, prompt).collect { ev ->
+                e.generateStream(conversation, prompt).collect { ev ->
                     when (ev) {
                         is TokenEvent.Prefill -> {
-                            val tag = if (isClone) "cached" else "cold"
+                            val tag = if (useCacheId != null) "cached" else "cold"
                             _uiState.update {
                                 it.copy(status = "Prefill ($tag): ${"%.0f".format(ev.elapsedMs)} ms")
                             }
@@ -173,9 +171,7 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
             } finally {
-                // Only close the session if it's NOT the one stored in a cache —
-                // closing a cached session would invalidate it for future clones.
-                if (!isClone) runCatching { session.close() }
+                runCatching { conversation.close() }
             }
         }
     }
@@ -192,20 +188,12 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
     // -- Prompt cache -------------------------------------------------------
 
     fun cacheCurrentPrompt(name: String, promptText: String) {
-        val e = engine ?: run {
-            _uiState.update { it.copy(status = "Engine not ready — cannot cache.") }
-            return
-        }
         if (promptText.isBlank()) return
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.update { it.copy(status = "Caching '$name' — prefilling…") }
-            val session = e.createSession()
-            session.addQueryChunk(promptText)
-            // Approximate token count via 4 chars/token heuristic — fine for UI display.
+            _uiState.update { it.copy(status = "Caching '$name'…") }
             val tokenHint = (promptText.length / 4).coerceAtLeast(1)
-            val entry = cacheManager.save(name = name, promptText = promptText,
-                tokenCountHint = tokenHint, warmSession = session)
-            _uiState.update { it.copy(status = "Cache '${entry.name}' saved (${tokenHint} tok est).") }
+            cacheManager.save(name = name, promptText = promptText, tokenCountHint = tokenHint)
+            _uiState.update { it.copy(status = "Cache '${name}' saved (${tokenHint} tok est).") }
             refreshSetupState()
         }
     }
@@ -242,7 +230,7 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
 
     enum class Role { User, Assistant }
     data class Message(val role: Role, val text: String)
-    data class CacheUi(val id: String, val name: String, val tokenCountHint: Int, val warm: Boolean)
+    data class CacheUi(val id: String, val name: String, val tokenCountHint: Int)
     data class UiState(
         val status: String = "Idle",
         val modelPresent: Boolean = false,

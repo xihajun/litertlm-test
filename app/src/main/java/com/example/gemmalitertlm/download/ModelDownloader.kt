@@ -10,10 +10,10 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * Downloads a Gemma 4 model .task file from Hugging Face.
+ * Downloads a model .litertlm file from Hugging Face.
  *
  * Gemma is a gated model on HF, so the user must:
- *   1. Accept the license at https://huggingface.co/google/gemma-4-E2B
+ *   1. Accept the license at https://huggingface.co/google/gemma-4-E4B-it
  *   2. Generate a token (read-only is fine) at https://huggingface.co/settings/tokens
  *   3. Paste the token here.
  *
@@ -22,16 +22,11 @@ import java.util.concurrent.TimeUnit
 object ModelDownloader {
 
     /**
-     * Default URL. The litert-community org mirrors Gemma .task / .litertlm files.
-     * If this URL 404s by the time you read this, update it to whatever .task file
-     * is currently published for Gemma 4 E2B.
-     *
-     * As of writing, the practical default for E2B on MediaPipe LLM Inference is
-     * the int4-quantized .task file. Filename and path may differ slightly — see
-     * https://huggingface.co/litert-community for the current listing.
+     * Default URL pointing to a .litertlm model file.
+     * Update this to your preferred model repo.
      */
     const val DEFAULT_URL: String =
-        "https://huggingface.co/litert-community/Gemma-4-E2B-it/resolve/main/gemma-4-E2B-it-int4.task"
+        "https://huggingface.co/xihajun/gemma4-e4b-mixed-en-lora-r16-v6e-1536-litert-lm/resolve/main/model.litertlm"
 
     sealed class Event {
         data class Progress(val bytesRead: Long, val total: Long) : Event()

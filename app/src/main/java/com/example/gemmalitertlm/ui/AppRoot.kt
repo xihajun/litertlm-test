@@ -93,7 +93,7 @@ private fun SetupScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) 
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = "MediaPipe LLM Inference (the Kotlin entry point to LiteRT-LM) running Gemma 4 E2B on-device.",
+                text = "LiteRT-LM Kotlin SDK with GPU-accelerated on-device inference.",
                 style = MaterialTheme.typography.bodyMedium,
             )
 
@@ -107,7 +107,7 @@ private fun SetupScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) 
                 Text("No model file at the expected location yet.", style = MaterialTheme.typography.bodyMedium)
             }
 
-            Text("Option A — sideload a .task file you downloaded yourself:",
+            Text("Option A — sideload a .litertlm file you downloaded yourself:",
                 style = MaterialTheme.typography.bodyMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {
@@ -118,7 +118,7 @@ private fun SetupScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) 
                 Button(onClick = {
                     pickFileLauncher.launch(arrayOf("*/*"))
                 }) {
-                    Text("Pick .task file")
+                    Text("Pick .litertlm file")
                 }
             }
 
@@ -189,7 +189,7 @@ private fun ChatScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) {
                 tonalElevation = 2.dp,
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Gemma 4 E2B · LiteRT-LM", style = MaterialTheme.typography.titleLarge)
+                    Text("Gemma 4 · LiteRT-LM", style = MaterialTheme.typography.titleLarge)
                     Text(state.status, style = MaterialTheme.typography.labelSmall, maxLines = 2,
                         overflow = TextOverflow.Ellipsis)
                 }
@@ -200,7 +200,7 @@ private fun ChatScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Cache controls
                     if (state.cachesOnDisk.isNotEmpty()) {
-                        Text("Prompt cache (file.bin equivalent):",
+                        Text("Prompt cache (long system prompts):",
                             style = MaterialTheme.typography.bodyMedium)
                         LazyColumn(modifier = Modifier.heightIn(max = 120.dp)) {
                             items(state.cachesOnDisk) { c ->
@@ -281,8 +281,8 @@ private fun ChatScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) {
                     }
                     Text(
                         text = if (selectedCacheId == null)
-                            "Mode: cold (fresh session each turn)"
-                        else "Mode: cached (cloning session '${state.cachesOnDisk.firstOrNull { it.id == selectedCacheId }?.name}')",
+                            "Mode: cold (fresh conversation each turn)"
+                        else "Mode: cached (using system prompt '${state.cachesOnDisk.firstOrNull { it.id == selectedCacheId }?.name}')",
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
