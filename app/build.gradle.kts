@@ -21,16 +21,6 @@ android {
         }
     }
 
-    signingConfigs {
-        // Debug signing for CI builds. Release signing would need a real keystore.
-        getByName("debug") {
-            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-    }
-
     buildTypes {
         getByName("debug") {
             isDebuggable = true
@@ -42,8 +32,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // For now, sign release with debug key so unsigned APK isn't produced by CI.
-            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
