@@ -56,8 +56,8 @@ class LlmEngine(
     fun createConversation(
         systemInstruction: String? = null,
         topK: Int = 40,
-        topP: Float = 0.95f,
-        temperature: Float = 0.8f,
+        topP: Double = 0.95,
+        temperature: Double = 0.8,
     ): Conversation {
         val e = checkNotNull(engine) { "Engine not initialized" }
         val convConfig = ConversationConfig(
