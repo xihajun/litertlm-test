@@ -73,14 +73,15 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.1")
+    implementation("androidx.activity:activity-ktx:1.9.1")
     implementation("androidx.documentfile:documentfile:1.0.1")
 
     // --- Kotlin coroutines ---
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     // --- LiteRT-LM (the current, non-deprecated Google on-device LLM SDK)
-    // Replaces the deprecated com.google.mediapipe:tasks-genai.
-    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
+    // Pin to 0.11.0 (latest stable as of May 2026).
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.11.0")
 
     // --- OkHttp for downloading model files from HF ---
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

@@ -52,7 +52,7 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
             it.copy(
                 modelPresent = modelFile.exists() && modelFile.length() > 0,
                 modelSizeMb = if (modelFile.exists()) modelFile.length() / (1024 * 1024) else 0,
-                cachesOnDisk = cacheManager.list().map { e -> CacheUi(e.id, e.name, e.tokenCountHint) },
+                cachesOnDisk = cacheManager.list().map { e: PromptCacheManager.Entry -> CacheUi(e.id, e.name, e.tokenCountHint) },
             )
         }
     }
@@ -71,8 +71,8 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val input = resolver.openInputStream(uri)
                     ?: throw IllegalStateException("Cannot open input stream for $uri")
-                input.use { stream ->
-                    modelFile.outputStream().use { out ->
+                input.use { stream: java.io.InputStream ->
+                    modelFile.outputStream().use { out: java.io.FileOutputStream ->
                         stream.copyTo(out, bufferSize = 1 shl 16)
                     }
                 }

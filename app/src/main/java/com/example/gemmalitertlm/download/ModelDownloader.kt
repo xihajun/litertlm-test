@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -52,7 +53,7 @@ object ModelDownloader {
             reqBuilder.header("Authorization", "Bearer ${hfToken.trim()}")
         }
 
-        client.newCall(reqBuilder.build()).execute().use { response ->
+        client.newCall(reqBuilder.build()).execute().use { response: Response ->
             if (!response.isSuccessful) {
                 emit(Event.Failed(
                     "HTTP ${response.code}: ${response.message}. " +

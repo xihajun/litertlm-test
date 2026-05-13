@@ -95,7 +95,7 @@ class PromptCacheManager(private val cacheDir: File) {
 
     private fun loadIndex() {
         if (!indexFile.exists()) return
-        indexFile.useLines { lines ->
+        indexFile.useLines { lines: Sequence<String> ->
             for (line in lines) {
                 val parts = line.split('\t')
                 if (parts.size < 5) continue
@@ -115,7 +115,7 @@ class PromptCacheManager(private val cacheDir: File) {
     }
 
     private fun saveIndex() {
-        val lines = entries.values.joinToString("\n") { e ->
+        val lines = entries.values.joinToString("\n") { e: Entry ->
             listOf(
                 e.id,
                 e.name.replace('\t', ' '),

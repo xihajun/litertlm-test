@@ -249,7 +249,7 @@ private fun ChatScreen(viewModel: ChatViewModel, state: ChatViewModel.UiState) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.horizontalScroll(rememberScrollState())
                     ) {
-                        SAMPLE_PROMPTS.forEach { p ->
+                        SAMPLE_PROMPTS.forEach { p: String ->
                             AssistChip(
                                 onClick = { input = p },
                                 label = { Text(p, maxLines = 1, overflow = TextOverflow.Ellipsis) },
